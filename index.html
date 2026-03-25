@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movie Watchlist</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===================== AUTH SECTION ===================== -->
+  <!-- Shown when the user is not logged in -->
+  <section id="auth-section">
+    <div class="auth-card">
+      <div class="logo">🎬</div>
+      <h1>Movie Watchlist</h1>
+      <p class="tagline">
+        Your personal movie tracker — powered by the cloud.
+        Sign in to sync your watchlist across all devices.
+      </p>
+
+      <!-- Tab switcher: Sign In / Sign Up -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="signin">Sign In</button>
+        <button class="auth-tab" data-tab="signup">Sign Up</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <form id="signin-form" class="auth-form">
+        <input
+          type="email"
+          id="signin-email"
+          placeholder="Email address"
+          autocomplete="email"
+          required
+        />
+        <input
+          type="password"
+          id="signin-password"
+          placeholder="Password"
+          autocomplete="current-password"
+          required
+        />
+        <button type="submit" class="btn-primary btn-full">Sign In</button>
+      </form>
+
+      <!-- Sign Up Form (hidden by default) -->
+      <form id="signup-form" class="auth-form hidden">
+        <input
+          type="text"
+          id="signup-name"
+          placeholder="Display name"
+          autocomplete="name"
+          required
+        />
+        <input
+          type="email"
+          id="signup-email"
+          placeholder="Email address"
+          autocomplete="email"
+          required
+        />
+        <input
+          type="password"
+          id="signup-password"
+          placeholder="Password (min 6 characters)"
+          autocomplete="new-password"
+          minlength="6"
+          required
+        />
+        <button type="submit" class="btn-primary btn-full">Create Account</button>
+      </form>
+
+      <!-- Inline error / info message for auth feedback -->
+      <p id="auth-error" class="error hidden"></p>
+    </div>
+  </section>
+
+  <!-- ===================== MAIN APP ===================== -->
+  <!-- Hidden on load; revealed after successful authentication -->
+  <section id="app" class="hidden">
+
+    <!-- App header: title, movie count, profile trigger, logout -->
+    <header class="app-header">
+      <h1>🎬 Movie Watchlist</h1>
+      <div class="header-right">
+        <span id="movie-count" class="count-badge">0 movies</span>
+
+        <!-- Clicking the avatar/name opens the profile modal -->
+        <button class="profile-trigger" id="profile-trigger" title="Edit profile">
+          <img id="header-avatar" class="avatar-sm" src="" alt="Your avatar" />
+          <span id="header-name" class="header-name"></span>
+        </button>
+
+        <!-- Logout button -->
+        <button id="logout-btn" class="btn-icon" title="Sign out">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ---- Search Bar ---- -->
+    <div class="search-bar">
+      <input
+        type="text"
+        id="search-input"
+        placeholder="🔍  Search by title, genre, or tag..."
+        autocomplete="off"
+      />
+    </div>
+
+    <!-- ---- Add Movie Form ---- -->
+    <div class="add-movie-form">
+      <h2>Add a Movie</h2>
+
+      <!-- Primary row: title, genre, add button -->
+      <div class="form-row">
+        <input
+          type="text"
+          id="movie-title"
+          placeholder="Movie title..."
+          maxlength="100"
+          autocomplete="off"
+        />
+        <select id="movie-genre">
+          <option value="">Genre (optional)</option>
+          <option value="Action">Action</option>
+          <option value="Comedy">Comedy</option>
+          <option value="Drama">Drama</option>
+          <option value="Horror">Horror</option>
+          <option value="Sci-Fi">Sci-Fi</option>
+          <option value="Romance">Romance</option>
+          <option value="Thriller">Thriller</option>
+          <option value="Animation">Animation</option>
+          <option value="Documentary">Documentary</option>
+          <option value="Other">Other</option>
+        </select>
+        <button id="add-btn" class="btn-primary">+ Add</button>
+      </div>
+
+      <!-- Secondary row: tags, notes, poster upload -->
+      <div class="form-row-secondary">
+        <input
+          type="text"
+          id="movie-tags"
+          placeholder="Tags (e.g. must-watch, 2024, award-winner)"
+          autocomplete="off"
+        />
+        <input
+          type="text"
+          id="movie-notes"
+          placeholder="Notes (optional)"
+          maxlength="200"
+          autocomplete="off"
+        />
+        <!-- Hidden file input triggered by the styled label -->
+        <label class="upload-label" title="Attach a poster image">
+          📷 Poster
+          <input type="file" id="movie-poster" accept="image/*" class="hidden" />
+        </label>
+      </div>
+
+      <!-- Displays the selected poster filename -->
+      <p id="poster-name" class="poster-name hidden"></p>
+
+      <!-- Inline validation error -->
+      <p id="error-msg" class="error hidden">Please enter a movie title.</p>
+    </div>
+
+    <!-- ---- Status Filter Tabs ---- -->
+    <div class="filter-tabs">
+      <button class="tab active" data-filter="all">All</button>
+      <button class="tab" data-filter="unwatched">Unwatched</button>
+      <button class="tab" data-filter="watched">Watched</button>
+    </div>
+
+    <!-- ---- Genre Filter Pills ---- -->
+    <!-- Dynamically populated from genres in the user's list; click to filter -->
+    <div id="genre-pills" class="genre-pills"></div>
+
+    <!-- ---- Movie List ---- -->
+    <!-- Movie cards are injected here by script.js -->
+    <ul id="movie-list"></ul>
+
+    <!-- Shown when the filtered list is empty -->
+    <p id="empty-msg" class="empty-msg hidden">No movies here yet. Add one above!</p>
+
+    <!-- ---- Clear All Button ---- -->
+    <div class="clear-row">
+      <button id="clear-btn" class="btn-danger hidden">Clear All</button>
+    </div>
+
+  </section>
+
+  <!-- ===================== PROFILE MODAL ===================== -->
+  <div id="profile-modal" class="modal-overlay hidden"
+       role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+    <div class="modal">
+      <button class="modal-close" id="close-profile" aria-label="Close profile">×</button>
+      <h2 class="modal-title" id="profile-modal-title">Your Profile</h2>
+
+      <!-- Avatar display + upload -->
+      <div class="avatar-section">
+        <img id="profile-avatar" class="avatar-lg" src="" alt="Your avatar" />
+        <label class="btn-secondary avatar-upload-btn">
+          Change Photo
+          <input type="file" id="avatar-upload" accept="image/*" class="hidden" />
+        </label>
+        <!-- Progress bar shown during avatar upload -->
+        <div id="avatar-upload-progress" class="upload-progress hidden">
+          <div class="progress-bar">
+            <div class="progress-fill" id="avatar-progress-fill"></div>
+          </div>
+          <span id="avatar-progress-text" class="progress-text">Uploading…</span>
+        </div>
+      </div>
+
+      <!-- Editable profile fields -->
+      <div class="profile-form">
+        <label for="profile-name">Display Name</label>
+        <input type="text" id="profile-name" placeholder="Your name" maxlength="50" />
+
+        <label for="profile-email">Email</label>
+        <input type="email" id="profile-email" disabled title="Email cannot be changed here" />
+
+        <button id="save-profile-btn" class="btn-primary btn-full">Save Changes</button>
+      </div>
+
+      <!-- Inline feedback message -->
+      <p id="profile-msg" class="success-msg hidden"></p>
+    </div>
+  </div>
+
+  <!-- ===================== LOADING OVERLAY ===================== -->
+  <!-- Shown while Supabase resolves the initial session on page load -->
+  <div id="loading-overlay" class="loading-overlay" aria-hidden="true">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- ===================== TOAST NOTIFICATION ===================== -->
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <!-- ===================== SUPABASE SDK ===================== -->
+  <!-- Pinned to a specific version so jsdelivr skips the @2 redirect lookup.   -->
+  <!-- defer on both tags lets the browser download them in parallel.            -->
+  <!-- script.js is marked defer too — execution order is still preserved.      -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" defer></script>
+  <script src="script.js" defer></script>
+</body>
+</html>
